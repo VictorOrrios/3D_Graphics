@@ -1,0 +1,18 @@
+project(p3OGL VERSION 1.0.0 LANGUAGES CXX)
+
+set(p3OGL_SOURCES
+    main.cpp
+)
+
+add_executable(p3OGL ${p3OGL_SOURCES})
+
+target_include_directories(p3OGL PUBLIC ${IGL_INCLUDE})
+
+# IGL already propagates GLFW, GLAD, GLM and stb_image
+target_link_libraries(p3OGL IGL)
+
+# Define absolute path to shaders folder
+target_compile_definitions(p3OGL PRIVATE SHADERS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/shaders_P3")
+
+# Define absolute path to textures folder
+target_compile_definitions(p3OGL PRIVATE TEXTURES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../img")

@@ -1,0 +1,49 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "windows",
+            "displayName": "Windows - Visual Studio 2022 (x64)",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "linux",
+            "displayName": "Linux - Makefiles (Debug)",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows",
+            "displayName": "Windows - Debug",
+            "configurePreset": "windows",
+            "configuration": "Debug"
+        },
+        {
+            "name": "linux",
+            "displayName": "Linux - Debug",
+            "configurePreset": "linux"
+        }
+    ]
+}

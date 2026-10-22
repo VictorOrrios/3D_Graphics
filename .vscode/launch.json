@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Linux: p1GLSL",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/build/p1GLSL/p1GLSL",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Linux: p2GLSL",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/build/p2GLSL/p2GLSL",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Linux: p3OGL",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/build/p3OGL/p3OGL",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Linux: p4OGL",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/build/p4OGL/p4OGL",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "console": "integratedTerminal"
+    }
+  ]
+}
