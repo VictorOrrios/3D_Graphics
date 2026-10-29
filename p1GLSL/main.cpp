@@ -1,5 +1,9 @@
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/scalar_constants.hpp"
+#include "glm/trigonometric.hpp"
 #include <IGL/BOX.h>
 #include <IGL/IGlib.h>
+#include <ctime>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -10,6 +14,7 @@
 
 // Scene object IDs
 int objId = -1;
+float angle = 0.f;
 
 // CB declaration
 void resizeFunc(int width, int height);
@@ -23,8 +28,8 @@ int main(int argc, char **argv)
 #ifdef _WIN32
 	std::locale::global(std::locale("spanish")); // Spanish accents
 #endif
-	std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v1.vert";
-	std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v1.frag";
+	std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v5.vert";
+	std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v5.frag";
 	if (!IGlib::init(vertexShader.c_str(), fragmentShader.c_str()))
 		return -1;
 
@@ -39,6 +44,23 @@ int main(int argc, char **argv)
 
 	glm::mat4 modelMat = glm::mat4(1.0f);
 	IGlib::setModelMat(objId, modelMat);
+
+	glm::mat4 viewMat = glm::mat4(1.0f);
+	viewMat[3].z = -6;
+	IGlib::setViewMat(viewMat);
+
+	// Frustrum params
+	float near = 0.01f;
+	float far = 10.0f;
+	float fov = 60;
+	float tanInv = 1/glm::tan((fov/2.0)*PI/180.0f);
+
+	glm::mat4 projMat = glm::mat4(0.0f);
+	projMat[0].x = tanInv;
+	projMat[1].y = tanInv;
+	projMat[2].z = -(far+near)/(far-near);
+	projMat[2].w = -(2*far*near)/(far-near);
+	projMat[3].z = -1;
 
 	// Add textures here
 
@@ -62,6 +84,10 @@ void resizeFunc(int width, int height)
 
 void idleFunc()
 {
+    glm::mat4 modelMat = glm::mat4(1.0f);
+    modelMat = glm::rotate(modelMat, angle, glm::vec3(1,1,0));
+    IGlib::setModelMat(objId, modelMat);
+    angle = (angle>PI*2.0)? 0.0f : angle+0.01;
 }
 
 void keyboardFunc(unsigned char key, int x, int y)
