@@ -21,12 +21,19 @@ float angle = 0.f;
 float angle2 = 0.f;
 
 // Camera control
+enum CameraControl { FPS = 0, ORBITAL };
+const CameraControl cameraType = CameraControl::ORBITAL;
 const float speed = 1.f;
-const float sensitivity = PI/1000.0f;
-const float MAX_ABS_Y_FPS = 0.9;
+const float sensitivity = PI / 1000.0f;
 const glm::vec3 up(0, 1, 0);
+// FPS Camera
 glm::vec3 eye(0, 0, -10);
 glm::vec3 center(0, 0, 1); // Relative
+// ORBITAL Camera
+const float orbitRadius = 10.0;
+glm::vec3 target(0, 0, 0);
+glm::vec3 orbitDir(0, 0, -1);
+// Mouse vars
 bool mousePressed = false;
 glm::vec2 lastMousePos;
 
@@ -54,7 +61,12 @@ void setProjMat(float aspect) {
 }
 
 void setViewMat() {
-  glm::mat4 viewMat = glm::lookAt(eye, eye + center, up);
+  glm::mat4 viewMat;
+  if (cameraType == CameraControl::FPS) {
+    viewMat = glm::lookAt(eye, eye + center, up);
+  } else if (cameraType == CameraControl::ORBITAL) {
+    viewMat = glm::lookAt(orbitDir * orbitRadius + target, target, up);
+  }
   IGlib::setViewMat(viewMat);
 }
 
@@ -127,23 +139,44 @@ void idleFunc() {
 }
 
 void keyboardFunc(unsigned char key, int x, int y) {
-  switch (key) {
-  case 'w':
-    eye += center * speed;
-    break;
-  case 's':
-    eye -= center * speed;
-    break;
-  case 'd': {
-    glm::vec3 right = glm::cross(center, up);
-    eye += right * speed;
-    break;
-  }
-  case 'a': {
-    glm::vec3 left = glm::cross(up, center);
-    eye += left * speed;
-    break;
-  }
+  if (cameraType == CameraControl::FPS) {
+    switch (key) {
+    case 'w':
+      eye += center * speed;
+      break;
+    case 's':
+      eye -= center * speed;
+      break;
+    case 'd': {
+      glm::vec3 right = glm::cross(center, up);
+      eye += right * speed;
+      break;
+    }
+    case 'a': {
+      glm::vec3 left = glm::cross(up, center);
+      eye += left * speed;
+      break;
+    }
+    }
+  } else if (cameraType == CameraControl::ORBITAL) {
+    glm::vec3 forward = glm::normalize(glm::vec3(-orbitDir.x, 0, -orbitDir.z));
+    glm::vec3 right = glm::cross(forward, up);
+    switch (key) {
+    case 'w':
+      target += forward * speed;
+      break;
+    case 's':
+      target -= forward * speed;
+      break;
+    case 'd': {
+      target += right * speed;
+      break;
+    }
+    case 'a': {
+      target -= right * speed;
+      break;
+    }
+    }
   }
 
   setViewMat();
@@ -165,14 +198,23 @@ void mouseMotionFunc(int x, int y) {
   if (!mousePressed)
     return;
 
-  glm::vec2 mouseDelta(x-lastMousePos.x,lastMousePos.y-y);
+  glm::vec2 mouseDelta(x - lastMousePos.x, lastMousePos.y - y);
 
-  glm::mat4 m(1.0f);
-  glm::vec3 right = glm::cross(center, up);
-  glm::vec3 localUp = glm::cross(right, center);
-  m = glm::rotate(m, -mouseDelta.x*sensitivity, localUp);
-  m = glm::rotate(m, mouseDelta.y*sensitivity, right);
-  center = m*glm::vec4(center,1);
+  if (cameraType == CameraControl::FPS) {
+    glm::vec3 right = glm::cross(center, up);
+    glm::vec3 localUp = glm::cross(right, center);
+    glm::mat4 m(1.0f);
+    m = glm::rotate(m, -mouseDelta.x * sensitivity, localUp);
+    m = glm::rotate(m, mouseDelta.y * sensitivity, right);
+    center = m * glm::vec4(center, 1);
+  } else if (cameraType == CameraControl::ORBITAL) {
+    glm::vec3 forward = -eye;
+    glm::vec3 right = glm::cross(forward, up);
+    glm::mat4 m(1.0f);
+    m = glm::rotate(m, -mouseDelta.x * sensitivity, up);
+    m = glm::rotate(m, mouseDelta.y * sensitivity, right);
+    orbitDir = m * glm::vec4(orbitDir, 1);
+  }
 
   lastMousePos.x = x;
   lastMousePos.y = y;
