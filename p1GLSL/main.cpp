@@ -28,8 +28,8 @@ int main(int argc, char **argv)
 #ifdef _WIN32
 	std::locale::global(std::locale("spanish")); // Spanish accents
 #endif
-	std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v5.vert";
-	std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v5.frag";
+	std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v8.vert";
+	std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v8.frag";
 	if (!IGlib::init(vertexShader.c_str(), fragmentShader.c_str()))
 		return -1;
 
@@ -63,6 +63,8 @@ int main(int argc, char **argv)
 	projMat[3].z = -1;
 
 	// Add textures here
+	std::string colorTexturePath = std::string(TEXTURES_PATH)+"/color.png";
+	IGlib::addColorTex(objId,colorTexturePath.c_str());
 
 	// CBs
 	IGlib::setResizeCB(resizeFunc);
