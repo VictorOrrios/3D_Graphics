@@ -1,5 +1,7 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/scalar_constants.hpp"
+#include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "glm/trigonometric.hpp"
 #include <IGL/BOX.h>
 #include <IGL/IGlib.h>
@@ -14,7 +16,18 @@
 
 // Scene object IDs
 int objId = -1;
+int objId2 = -1;
 float angle = 0.f;
+float angle2 = 0.f;
+
+// Camera control
+const float speed = 1.f;
+const float sensitivity = PI/100.0f;
+const glm::vec3 up(0, 1, 0);
+glm::vec3 eye(0, 0, -10);
+glm::vec3 center(0, 0, 1); // Relative
+bool mousePressed = false;
+glm::vec2 lastMousePos;
 
 // CB declaration
 void resizeFunc(int width, int height);
@@ -23,99 +36,151 @@ void keyboardFunc(unsigned char key, int x, int y);
 void mouseFunc(int button, int state, int x, int y);
 void mouseMotionFunc(int x, int y);
 
-int main(int argc, char **argv)
-{
+void setProjMat(float aspect) {
+  // Frustrum params
+  float near = 0.01f;
+  float far = 100.0f;
+  float fov = 60;
+  float tanInv = 1 / glm::tan((fov / 2.0) * PI / 180.0f);
+
+  glm::mat4 projMat = glm::mat4(0.0f);
+  projMat[0][0] = tanInv / aspect;
+  projMat[1][1] = tanInv;
+  projMat[2][2] = -(far + near) / (far - near);
+  projMat[2][3] = -1.0f;
+  projMat[3][2] = -(2.0f * far * near) / (far - near);
+  IGlib::setProjMat(projMat);
+}
+
+void setViewMat() {
+  glm::mat4 viewMat = glm::lookAt(eye, eye + center, up);
+  IGlib::setViewMat(viewMat);
+}
+
+int main(int argc, char **argv) {
 #ifdef _WIN32
-	std::locale::global(std::locale("spanish")); // Spanish accents
+  std::locale::global(std::locale("spanish")); // Spanish accents
 #endif
-	std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v8.vert";
-	std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v8.frag";
-	if (!IGlib::init(vertexShader.c_str(), fragmentShader.c_str()))
-		return -1;
+  std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v7.vert";
+  std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v7.frag";
+  if (!IGlib::init(vertexShader.c_str(), fragmentShader.c_str()))
+    return -1;
 
-	// Adjust the camera
-	// Default values if they are not defined
-	// IGlib::setProjMat(const glm::mat4 &projMat);
-	// IGlib::setViewMat(const glm::mat4 &viewMat);
+  // Adjust the camera
+  // Default values if they are not defined
+  // IGlib::setProjMat(const glm::mat4 &projMat);
+  // IGlib::setViewMat(const glm::mat4 &viewMat);
 
-	// Create the object we want to visualize
-	objId = IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
-							 cubeVertexPos, cubeVertexColor, cubeVertexNormal, cubeVertexTexCoord, cubeVertexTangent);
+  // Create the object we want to visualize
+  objId = IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
+                           cubeVertexPos, cubeVertexColor, cubeVertexNormal,
+                           cubeVertexTexCoord, cubeVertexTangent);
+  objId2 = IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
+                            cubeVertexPos, cubeVertexColor, cubeVertexNormal,
+                            cubeVertexTexCoord, cubeVertexTangent);
 
-	glm::mat4 modelMat = glm::mat4(1.0f);
-	IGlib::setModelMat(objId, modelMat);
+  glm::mat4 modelMat = glm::mat4(1.0f);
+  IGlib::setModelMat(objId, modelMat);
+  IGlib::setModelMat(objId2, modelMat);
 
-	glm::mat4 viewMat = glm::mat4(1.0f);
-	viewMat[3].z = -6;
-	IGlib::setViewMat(viewMat);
+  setViewMat();
 
-	// Frustrum params
-	float near = 0.01f;
-	float far = 10.0f;
-	float fov = 60;
-	float tanInv = 1/glm::tan((fov/2.0)*PI/180.0f);
+  setProjMat(1);
 
-	glm::mat4 projMat = glm::mat4(0.0f);
-	projMat[0].x = tanInv;
-	projMat[1].y = tanInv;
-	projMat[2].z = -(far+near)/(far-near);
-	projMat[2].w = -(2*far*near)/(far-near);
-	projMat[3].z = -1;
+  // Add textures here
+  std::string colorTexturePath = std::string(TEXTURES_PATH) + "/color.png";
+  IGlib::addColorTex(objId, colorTexturePath.c_str());
+  IGlib::addColorTex(objId2, colorTexturePath.c_str());
 
-	// Add textures here
-	std::string colorTexturePath = std::string(TEXTURES_PATH)+"/color.png";
-	IGlib::addColorTex(objId,colorTexturePath.c_str());
+  // CBs
+  IGlib::setResizeCB(resizeFunc);
+  IGlib::setIdleCB(idleFunc);
+  IGlib::setKeyboardCB(keyboardFunc);
+  IGlib::setMouseCB(mouseFunc);
+  IGlib::setMouseMoveCB(mouseMotionFunc);
 
-	// CBs
-	IGlib::setResizeCB(resizeFunc);
-	IGlib::setIdleCB(idleFunc);
-	IGlib::setKeyboardCB(keyboardFunc);
-	IGlib::setMouseCB(mouseFunc);
-	IGlib::setMouseMoveCB(mouseMotionFunc);
-
-	// Main loop
-	IGlib::mainLoop();
-	IGlib::destroy();
-	return 0;
+  // Main loop
+  IGlib::mainLoop();
+  IGlib::destroy();
+  return 0;
 }
 
-void resizeFunc(int width, int height)
-{
-	// Adjust aspect ratio to window size
+void resizeFunc(int width, int height) {
+  // Adjust aspect ratio to window size
+  setProjMat((float)width / (float)height);
 }
 
-void idleFunc()
-{
-    glm::mat4 modelMat = glm::mat4(1.0f);
-    modelMat = glm::rotate(modelMat, angle, glm::vec3(1,1,0));
-    IGlib::setModelMat(objId, modelMat);
-    angle = (angle>PI*2.0)? 0.0f : angle+0.01;
+void idleFunc() {
+  glm::mat4 modelMat = glm::mat4(1.0f);
+  modelMat = glm::rotate(modelMat, angle, glm::vec3(1, 1, 0));
+  IGlib::setModelMat(objId, modelMat);
+
+  glm::mat4 modelMat2 = glm::mat4(1.0f);
+  modelMat2 = glm::rotate(modelMat2, angle2, glm::vec3(0, 1, 0));
+  modelMat2 = glm::translate(modelMat2, glm::vec3(5, 0, 0));
+  modelMat2 = glm::rotate(modelMat2, angle2, glm::vec3(0, 1, 0));
+  IGlib::setModelMat(objId2, modelMat2);
+
+  angle = (angle > PI * 2.0) ? 0.0f : angle + 0.01;
+  angle2 = (angle > PI * 2.0) ? 0.0f : angle + 0.01;
 }
 
-void keyboardFunc(unsigned char key, int x, int y)
-{
-	std::cout << "The pressed key is " << key << std::endl
-			  << std::endl;
+void keyboardFunc(unsigned char key, int x, int y) {
+  switch (key) {
+  case 'w':
+    eye += center * speed;
+    break;
+  case 's':
+    eye -= center * speed;
+    break;
+  case 'd': {
+    glm::vec3 right = glm::cross(center, up);
+    eye += right * speed;
+    break;
+  }
+  case 'a': {
+    glm::vec3 left = glm::cross(up, center);
+    eye += left * speed;
+    break;
+  }
+  }
+
+  setViewMat();
 }
 
-void mouseFunc(int button, int state, int x, int y)
-{
-	if (state == 0)
-		std::cout << "The pressed button is ";
-	else
-		std::cout << "The released button is ";
+void mouseFunc(int button, int state, int x, int y) {
+  if (state == 0) {
+    std::cout << "The pressed button is ";
+    if (button == 0) {
+      mousePressed = true;
+      lastMousePos = glm::vec2(x, y);
+    }
+  } else {
+    std::cout << "The released button is ";
+    if (button == 0)
+      mousePressed = false;
+  }
 
-	if (button == 0)
-		std::cout << "left mouse button " << std::endl;
-	if (button == 1)
-		std::cout << "central mouse button " << std::endl;
-	if (button == 2)
-		std::cout << "right mouse button " << std::endl;
+  if (button == 0)
+    std::cout << "left mouse button " << std::endl;
+  if (button == 1)
+    std::cout << "central mouse button " << std::endl;
+  if (button == 2)
+    std::cout << "right mouse button " << std::endl;
 
-	std::cout << "in the window's position " << x << " " << y << std::endl
-			  << std::endl;
+  std::cout << "in the window's position " << x << " " << y << std::endl
+            << std::endl;
 }
 
-void mouseMotionFunc(int x, int y)
-{
+void mouseMotionFunc(int x, int y) {
+  if (!mousePressed)
+    return;
+
+  glm::vec2 mouseDelta(x-lastMousePos.x,lastMousePos.y-y);
+
+
+  std::cout << "mouse delta " << mouseDelta.x << " "
+            << mouseDelta.y << std::endl;
+  lastMousePos.x = x;
+  lastMousePos.y = y;
 }
