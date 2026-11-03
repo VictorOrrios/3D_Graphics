@@ -58,7 +58,7 @@ void setProjMat(float aspect) {
   float tanInv = 1 / glm::tan((fov / 2.0) * PI / 180.0f);
 
   glm::mat4 projMat = glm::mat4(0.0f);
-  projMat[0][0] = tanInv / aspect;
+  projMat[0][0] = tanInv / aspect; // Use aspect ratio
   projMat[1][1] = tanInv;
   projMat[2][2] = -(far + near) / (far - near);
   projMat[2][3] = -1.0f;
@@ -91,15 +91,14 @@ int main(int argc, char **argv) {
   // IGlib::setViewMat(const glm::mat4 &viewMat);
 
   // Create the object we want to visualize
-  objId = IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
-                           cubeVertexPos, cubeVertexColor, cubeVertexNormal,
-                           cubeVertexTexCoord, cubeVertexTangent);
-  objId2 = IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
-                            cubeVertexPos, cubeVertexColor, cubeVertexNormal,
-                            cubeVertexTexCoord, cubeVertexTangent);
-  objId3 = IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
-                            cubeVertexPos, cubeVertexColor, cubeVertexNormal,
-                            cubeVertexTexCoord, cubeVertexTangent);
+  auto createCube = []() {
+    return IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
+                          cubeVertexPos, cubeVertexColor, cubeVertexNormal,
+                          cubeVertexTexCoord, cubeVertexTangent);
+  };
+  objId = createCube();
+  objId2 = createCube();
+  objId3 = createCube();
 
   glm::mat4 modelMat = glm::mat4(1.0f);
   IGlib::setModelMat(objId, modelMat);
@@ -135,16 +134,21 @@ void resizeFunc(int width, int height) {
 }
 
 void idleFunc() {
+  // Rotation around Y
   glm::mat4 modelMat = glm::mat4(1.0f);
   modelMat = glm::rotate(modelMat, angle, glm::vec3(1, 1, 0));
   IGlib::setModelMat(objId, modelMat);
+  angle = (angle > PI * 2.0) ? 0.0f : angle + 0.01;
 
+  // Rotate around obj1 and Y
   glm::mat4 modelMat2 = glm::mat4(1.0f);
   modelMat2 = glm::rotate(modelMat2, angle2, glm::vec3(0, 1, 0));
   modelMat2 = glm::translate(modelMat2, glm::vec3(5, 0, 0));
   modelMat2 = glm::rotate(modelMat2, angle2, glm::vec3(0, 1, 0));
   IGlib::setModelMat(objId2, modelMat2);
+  angle2 = (angle > PI * 2.0) ? 0.0f : angle + 0.01;
 
+  // Cubic bezier, ease in and out
   auto bezier = [](float t) {
     const float p0 = 0;
     const float p1 = 0.1;
@@ -156,6 +160,8 @@ void idleFunc() {
     return (u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 +
             t * t * t * p3);
   };
+
+  // Rotate around obj1 using interpolated position with bezier curve
   glm::mat4 modelMat3 = glm::mat4(1.0f);
   float bezierAlpha = bezier(obj3T);
   glm::vec3 interpolPos =
@@ -164,11 +170,10 @@ void idleFunc() {
   modelMat3 = glm::translate(modelMat3, interpolPos);
   IGlib::setModelMat(objId3, modelMat3);
 
-  angle = (angle > PI * 2.0) ? 0.0f : angle + 0.01;
-  angle2 = (angle > PI * 2.0) ? 0.0f : angle + 0.01;
-
+  // Random float [-1.0,1.0]
   auto r01 = []() { return (float(rand()) / RAND_MAX - 0.5f) * 2.0f; };
   if (obj3T > 1.0) {
+    // If obj3 has finished loop create new random position
     obj3T = 0.0f;
     obj3LastDir = obj3NextDir;
     obj3NextDir = glm::normalize(glm::vec3(r01(), r01(), r01()));
@@ -179,6 +184,7 @@ void idleFunc() {
 
 void keyboardFunc(unsigned char key, int x, int y) {
   if (cameraType == CameraControl::FPS) {
+    // FPS wasd moves eye based on where its pointing
     switch (key) {
     case 'w':
       eye += center * speed;
@@ -198,6 +204,7 @@ void keyboardFunc(unsigned char key, int x, int y) {
     }
     }
   } else if (cameraType == CameraControl::ORBITAL) {
+    // ORBITAL wasd moves target based on screen direction
     glm::vec3 forward = glm::normalize(glm::vec3(-orbitDir.x, 0, -orbitDir.z));
     glm::vec3 right = glm::cross(forward, up);
     switch (key) {
@@ -222,6 +229,7 @@ void keyboardFunc(unsigned char key, int x, int y) {
 }
 
 void mouseFunc(int button, int state, int x, int y) {
+  // Only move when mouse0 is held down
   if (state == 0) {
     if (button == 0) {
       mousePressed = true;
@@ -234,9 +242,11 @@ void mouseFunc(int button, int state, int x, int y) {
 }
 
 void mouseMotionFunc(int x, int y) {
+  // Only move when mouse0 is held down
   if (!mousePressed)
     return;
 
+  // Frame based, may change with frame rate
   glm::vec2 mouseDelta(x - lastMousePos.x, lastMousePos.y - y);
 
   if (cameraType == CameraControl::FPS) {
