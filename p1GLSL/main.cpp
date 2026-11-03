@@ -22,7 +22,8 @@ float angle2 = 0.f;
 
 // Camera control
 const float speed = 1.f;
-const float sensitivity = PI/100.0f;
+const float sensitivity = PI/1000.0f;
+const float MAX_ABS_Y_FPS = 0.9;
 const glm::vec3 up(0, 1, 0);
 glm::vec3 eye(0, 0, -10);
 glm::vec3 center(0, 0, 1); // Relative
@@ -61,8 +62,8 @@ int main(int argc, char **argv) {
 #ifdef _WIN32
   std::locale::global(std::locale("spanish")); // Spanish accents
 #endif
-  std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v7.vert";
-  std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v7.frag";
+  std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v10.vert";
+  std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v10.frag";
   if (!IGlib::init(vertexShader.c_str(), fragmentShader.c_str()))
     return -1;
 
@@ -150,26 +151,14 @@ void keyboardFunc(unsigned char key, int x, int y) {
 
 void mouseFunc(int button, int state, int x, int y) {
   if (state == 0) {
-    std::cout << "The pressed button is ";
     if (button == 0) {
       mousePressed = true;
       lastMousePos = glm::vec2(x, y);
     }
   } else {
-    std::cout << "The released button is ";
     if (button == 0)
       mousePressed = false;
   }
-
-  if (button == 0)
-    std::cout << "left mouse button " << std::endl;
-  if (button == 1)
-    std::cout << "central mouse button " << std::endl;
-  if (button == 2)
-    std::cout << "right mouse button " << std::endl;
-
-  std::cout << "in the window's position " << x << " " << y << std::endl
-            << std::endl;
 }
 
 void mouseMotionFunc(int x, int y) {
@@ -178,9 +167,14 @@ void mouseMotionFunc(int x, int y) {
 
   glm::vec2 mouseDelta(x-lastMousePos.x,lastMousePos.y-y);
 
+  glm::mat4 m(1.0f);
+  glm::vec3 right = glm::cross(center, up);
+  glm::vec3 localUp = glm::cross(right, center);
+  m = glm::rotate(m, -mouseDelta.x*sensitivity, localUp);
+  m = glm::rotate(m, mouseDelta.y*sensitivity, right);
+  center = m*glm::vec4(center,1);
 
-  std::cout << "mouse delta " << mouseDelta.x << " "
-            << mouseDelta.y << std::endl;
   lastMousePos.x = x;
   lastMousePos.y = y;
+  setViewMat();
 }
