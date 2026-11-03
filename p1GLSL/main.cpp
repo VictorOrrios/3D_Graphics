@@ -5,6 +5,7 @@
 #include "glm/trigonometric.hpp"
 #include <IGL/BOX.h>
 #include <IGL/IGlib.h>
+#include <cstdlib>
 #include <ctime>
 
 #define GLM_FORCE_RADIANS
@@ -17,8 +18,13 @@
 // Scene object IDs
 int objId = -1;
 int objId2 = -1;
+int objId3 = -1;
 float angle = 0.f;
 float angle2 = 0.f;
+float obj3T = 0.f;
+const float obj3Radius = 5.f;
+glm::vec3 obj3LastDir(1, 0, 0);
+glm::vec3 obj3NextDir(0, 1, 0);
 
 // Camera control
 enum CameraControl { FPS = 0, ORBITAL };
@@ -91,10 +97,14 @@ int main(int argc, char **argv) {
   objId2 = IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
                             cubeVertexPos, cubeVertexColor, cubeVertexNormal,
                             cubeVertexTexCoord, cubeVertexTangent);
+  objId3 = IGlib::createObj(cubeNTriangleIndex, cubeNVertex, cubeTriangleIndex,
+                            cubeVertexPos, cubeVertexColor, cubeVertexNormal,
+                            cubeVertexTexCoord, cubeVertexTangent);
 
   glm::mat4 modelMat = glm::mat4(1.0f);
   IGlib::setModelMat(objId, modelMat);
   IGlib::setModelMat(objId2, modelMat);
+  IGlib::setModelMat(objId3, modelMat);
 
   setViewMat();
 
@@ -104,6 +114,7 @@ int main(int argc, char **argv) {
   std::string colorTexturePath = std::string(TEXTURES_PATH) + "/color.png";
   IGlib::addColorTex(objId, colorTexturePath.c_str());
   IGlib::addColorTex(objId2, colorTexturePath.c_str());
+  IGlib::addColorTex(objId3, colorTexturePath.c_str());
 
   // CBs
   IGlib::setResizeCB(resizeFunc);
@@ -134,8 +145,36 @@ void idleFunc() {
   modelMat2 = glm::rotate(modelMat2, angle2, glm::vec3(0, 1, 0));
   IGlib::setModelMat(objId2, modelMat2);
 
+  auto bezier = [](float t) {
+    const float p0 = 0;
+    const float p1 = 0.1;
+    const float p2 = 0.9;
+    const float p3 = 1;
+
+    const float u = 1 - t;
+
+    return (u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 +
+            t * t * t * p3);
+  };
+  glm::mat4 modelMat3 = glm::mat4(1.0f);
+  float bezierAlpha = bezier(obj3T);
+  glm::vec3 interpolPos =
+      obj3LastDir * (1 - bezierAlpha) + obj3NextDir * bezierAlpha;
+  interpolPos = glm::normalize(interpolPos) * obj3Radius;
+  modelMat3 = glm::translate(modelMat3, interpolPos);
+  IGlib::setModelMat(objId3, modelMat3);
+
   angle = (angle > PI * 2.0) ? 0.0f : angle + 0.01;
   angle2 = (angle > PI * 2.0) ? 0.0f : angle + 0.01;
+
+  auto r01 = []() { return (float(rand()) / RAND_MAX - 0.5f) * 2.0f; };
+  if (obj3T > 1.0) {
+    obj3T = 0.0f;
+    obj3LastDir = obj3NextDir;
+    obj3NextDir = glm::normalize(glm::vec3(r01(), r01(), r01()));
+  } else {
+    obj3T += 0.01;
+  }
 }
 
 void keyboardFunc(unsigned char key, int x, int y) {
