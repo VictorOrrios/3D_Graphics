@@ -257,7 +257,7 @@ void mouseMotionFunc(int x, int y) {
     m = glm::rotate(m, mouseDelta.y * sensitivity, right);
     center = m * glm::vec4(center, 1);
   } else if (cameraType == CameraControl::ORBITAL) {
-    glm::vec3 forward = -eye;
+    glm::vec3 forward = -orbitDir;
     glm::vec3 right = glm::cross(forward, up);
     glm::mat4 m(1.0f);
     m = glm::rotate(m, -mouseDelta.x * sensitivity, up);
