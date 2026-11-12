@@ -1,6 +1,7 @@
 #version 330 core
 
 in vec3 vertColor;
+in vec3 outNormal;
 in vec2 texCoord;
 uniform sampler2D colorTex;
 
@@ -48,13 +49,22 @@ float perlin_noise(vec2 uv, float cells_count)
 }
 
 void main() {
-    float aux1 = texCoord.x - 0.5f;
-    float aux2 = texCoord.y - 0.5f;
-    bool discardCondition = aux1 * aux1 + aux2 * aux2 > 0.2;
+    vec4 color;
+    int objId = gl_PrimitiveID/(4); // Cubes with 4 vertex per face
 
-    if (discardCondition)
-        discard;
+    if (objId == 0) {
+        float aux1 = texCoord.x - 0.5f;
+        float aux2 = texCoord.y - 0.5f;
+        bool discardCondition = aux1 * aux1 + aux2 * aux2 > 0.2;
 
-    vec4 color = vec4(vec3(perlin_noise(texCoord, 10)), 1);
+        if (discardCondition)
+            discard;
+        color = vec4(vec3(perlin_noise(texCoord, 10)), 1);
+
+    }else if (objId == 1) {
+        color = vec4(outNormal, 1);
+    }else{
+        color = texture2D(colorTex, texCoord);
+    }
     outColor = color;
 }
