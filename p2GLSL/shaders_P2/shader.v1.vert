@@ -46,6 +46,7 @@ vec3 shade() {
     vec3 L = normalize(Lpos - vPos);
     vec3 V = normalize(-vPos); // Camera position is 0.0 because of screen space
     // Could also use 4th column of view to get world space camera postion
+    vec3 H = normalize(L+V);
 
     // Ambient term
     vec3 ambient = Ia * ka;
@@ -54,6 +55,10 @@ vec3 shade() {
     // Diffuse term
     vec3 diffuse = Id * kd * clamp(dot(L, N),0,1);
     shading += diffuse;
+
+    // Specular term
+    vec3 specular = Is * ks * clamp(dot(L, H),0,1);
+    shading += specular;
 
     return shading;
 }
