@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
 #ifdef _WIN32
   std::locale::global(std::locale("spanish")); // Spanish accents
 #endif
-  std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v0.vert";
-  std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v0.frag";
+  std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v1.vert";
+  std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v1.frag";
   if (!IGlib::init(vertexShader.c_str(), fragmentShader.c_str()))
     return -1;
 
