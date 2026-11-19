@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
 #ifdef _WIN32
   std::locale::global(std::locale("spanish")); // Spanish accents
 #endif
-  std::string vertexShader = std::string(SHADERS_PATH) + "/shader.v1.vert";
-  std::string fragmentShader = std::string(SHADERS_PATH) + "/shader.v1.frag";
+  std::string vertexShader = std::string(SHADERS_PATH) + "/disney2012.vert";
+  std::string fragmentShader = std::string(SHADERS_PATH) + "/disney2012.frag";
   if (!IGlib::init(vertexShader.c_str(), fragmentShader.c_str()))
     return -1;
 
@@ -56,8 +56,14 @@ int main(int argc, char **argv) {
   IGlib::setModelMat(objId, modelMat);
 
   // Add textures here
-  std::string albedoTexPath = std::string(TEXTURES_PATH) + "/color.png";
+  std::string albedoTexPath = std::string(TEXTURES_PATH) + "/color2.png";
   IGlib::addColorTex(objId, albedoTexPath.c_str());
+
+  std::string specularTexPath = std::string(TEXTURES_PATH) + "/specMap.png";
+  IGlib::addSpecularTex(objId, specularTexPath.c_str());
+
+  std::string emissiveTexPath = std::string(TEXTURES_PATH) + "/emissive.png";
+  IGlib::addEmissiveTex(objId, emissiveTexPath.c_str());
 
   // CBs
   IGlib::setIdleCB(idleFunc);

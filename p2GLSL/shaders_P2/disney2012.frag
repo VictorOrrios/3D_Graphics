@@ -135,6 +135,8 @@ vec3 shade(DisneyMaterial m) {
 	vec3 L = normalize(Lpos - vPos);
 
 	// Ambient term. TO DO
+	vec3 ambient = Ia * m.baseColor * (1.0 - m.metallic);
+    shading += ambient;
 
 	// Specular term + Diffuse term. TO DO
 	// Evaluate BRDF (per-light). For multiple lights sum each light contribution
