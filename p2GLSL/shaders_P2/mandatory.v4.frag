@@ -114,9 +114,9 @@ vec3 disneyBRDF(DisneyMaterial m, vec3 N, vec3 V, vec3 L) {
 
     // Sheen term
     float grazing = 1.0 - VdotH;
-    float sheen = m.sheen * pow(grazing, 5.0);
     vec3 sheenColor = mix(vec3(1.0), tint, m.sheenTint);
-    brdfColor += sheenColor * sheen;
+    vec3 sheen = m.sheen * F_Schlick(sheenColor,VdotH);
+    brdfColor += sheen;
 
     // Clearcoat term
     vec3 clearcoat = vec3(0.0);
