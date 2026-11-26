@@ -167,7 +167,7 @@ vec3 shade(DisneyMaterial m) {
     shading += texture(emiTex, vTexCoord).rgb;
 
     // Gamma-correct to sRGB. TO DO
-    shading = pow(clmap(shading, 0.0, 1.0), vec3(1.0 / 2.2));
+    shading = pow(clamp(shading, 0.0, 1.0), vec3(1.0 / 2.2));
 
     return shading;
 }

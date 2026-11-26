@@ -42,12 +42,11 @@ struct Light {
 // Per light definition
 const int LIGHT_COUNT = 3;
 const Light lights[LIGHT_COUNT] = Light[](
-        Light(vec3(0.0, 0.0, 5.0), vec3(1.0), 1.0, 1, vec3(0, 0, -1)),
-        Light(vec3(-3.0, 0.0, -3.0), vec3(0.0, 0.0, 1.0), 1.0, 0, vec3(0)),
-        Light(vec3(2.0, 2.0, -2.0), vec3(1.0, 0.0, 0.0), 1.0, 0, vec3(0))
+        Light(vec3(0.0, 0.0, 15.0), vec3(1.0), 1.0, 1, vec3(0.0,0.0,-1.0)),
+        Light(vec3(-3.0, 0.0, -3.0), vec3(0.0, 0.0, 1.0), 1.0, 0, vec3(0.0)),
+        Light(vec3(2.0, 2.0, -2.0), vec3(1.0, 0.0, 0.0), 1.0, 0, vec3(0.0))
     );
-
-vec3 Ia = vec3(0.0);
+vec3 Ia = vec3(0.3);
 
 out vec4 outColor;
 
@@ -151,7 +150,7 @@ vec3 shade(DisneyMaterial m);
 
 void main() {
     // Hard-coded palette: Array of DisneyMaterial
-    int selectedMaterial = 1;
+    int selectedMaterial = 0;
     const DisneyMaterial materials[MATERIAL_COUNT] = DisneyMaterial[](
             // 0: Brushed Gold (metallic)
             DisneyMaterial(vec3(1.00, 0.84, 0.40), 0.0, 1.0, 0.0, 0.5, 0.24, 0.0, 0.0, 0.0, 0.0),
@@ -179,17 +178,17 @@ vec3 shade(DisneyMaterial m) {
         float L_distance = length(PtoL);
         vec3 L;
         float intensity;
-        switch (lights[i].type) {
+        switch(lights[i].type){
             case POINT_LIGHT:
             L = normalize(PtoL);
-            intensity = (lights[i].intensity / (L_distance * L_distance));
+            intensity = lights[i].intensity/(L_distance*L_distance);
             break;
+
             case DIRECTIONAL_LIGHT:
             L = -lights[i].direction;
             intensity = lights[i].intensity;
             break;
         }
-
         vec3 brdfCos = disneyBRDF(m, N, V, L);
         shading += intensity * lights[i].color * brdfCos;
     }
