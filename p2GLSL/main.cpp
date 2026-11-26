@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   std::locale::global(std::locale("spanish")); // Spanish accents
 #endif
   std::string vertexShader = std::string(SHADERS_PATH) + "/disney2012.vert";
-  std::string fragmentShader = std::string(SHADERS_PATH) + "/mandatory.v4.frag";
+  std::string fragmentShader = std::string(SHADERS_PATH) + "/optional.v1.frag";
   if (!IGlib::init(vertexShader.c_str(), fragmentShader.c_str()))
     return -1;
 
@@ -64,6 +64,9 @@ int main(int argc, char **argv) {
 
   std::string emissiveTexPath = std::string(TEXTURES_PATH) + "/emissive.png";
   IGlib::addEmissiveTex(objId, emissiveTexPath.c_str());
+
+  std::string normalTexPath = std::string(TEXTURES_PATH) + "/normal.png";
+  IGlib::addNormalTex(objId, normalTexPath.c_str());
 
   // CBs
   IGlib::setIdleCB(idleFunc);

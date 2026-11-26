@@ -157,7 +157,7 @@ void main() {
             // 0: Brushed Gold (metallic)
             DisneyMaterial(vec3(1.00, 0.84, 0.40), 0.0, 1.0, 0.0, 0.5, 0.24, 0.0, 0.0, 0.0, 0.0),
             // 1: Soft Plastic Toy (dielectric)
-            DisneyMaterial(vec3(0.95, 0.3, 0.05), 0.0, 0.0, 0.64, 0.75, 0.15, 0.0, 0.0, 0.0, 0.0),
+            DisneyMaterial(vec3(0.95, 0.3, 0.05), 0.0, 0.0, 0.64, 0.75, 0.15, 0.0, 0.0, 0.0, 0.0)
     );
 
     outColor = vec4(shade(materials[selectedMaterial]), 1.0);
